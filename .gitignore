@@ -69,3 +69,7 @@ Thumbs.db
 # MongoDB binaries
 backend/mongodb-*
 *.tgz
+
+# Logs and test files with potential secrets
+backend/*.log
+backend/test-*.js
