@@ -10,6 +10,7 @@ const nextConfig = {
     unoptimized: true,
   },
   allowedDevOrigins: ['*.clackypaas.com'],
+  output: 'standalone',
 }
 
 export default nextConfig

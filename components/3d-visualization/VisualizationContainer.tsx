@@ -3,9 +3,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import { VisualizationPanel } from '../layout';
 import Scene from './Scene';
+import OrganismScene from './OrganismScene';
+import { TreeVisualization } from './TreeVisualization';
 import { useChat } from '../../hooks/use-chat';
 import { LayerData, LayerType } from '../../types';
 import { aiService } from '../../lib/ai';
+import { CognitiveMap } from '../../lib/ai/cognitiveAnalysisEngine';
 
 interface VisualizationContainerProps {
   onItemClick?: (item: LayerData) => void;
@@ -15,11 +18,14 @@ export default function VisualizationContainer({ onItemClick }: VisualizationCon
   const { currentSession, selectedLayer, selectLayer } = useChat();
   const [layerData, setLayerData] = useState<LayerData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [viewMode, setViewMode] = useState<'layers' | 'organism' | 'tree'>('tree');
+  const [cognitiveMap, setCognitiveMap] = useState<CognitiveMap | undefined>();
 
   // 生成3D层数据
   useEffect(() => {
     if (!currentSession || !currentSession.messages.length) {
       setLayerData([]);
+      setCognitiveMap(undefined);
       return;
     }
 
@@ -29,6 +35,35 @@ export default function VisualizationContainer({ onItemClick }: VisualizationCon
     setTimeout(() => {
       const data = aiService.generateLayerData(currentSession.messages);
       setLayerData(data);
+      
+      // 构建认知地图（简化版）
+      const map: CognitiveMap = {
+        facts: data.filter(d => d.type === 'facts').map(d => ({
+          id: d.id,
+          content: d.content,
+          type: 'observational' as const,
+          confidence: d.intensity,
+          source: d.relatedMessageId
+        })),
+        insights: data.filter(d => d.type === 'insights').map(d => ({
+          id: d.id,
+          content: d.content,
+          type: 'pattern' as const,
+          relatedFacts: [],
+          confidence: d.intensity
+        })),
+        concepts: data.filter(d => d.type === 'concepts').map(d => ({
+          id: d.id,
+          content: d.content,
+          type: 'belief' as const,
+          relatedInsights: [],
+          strength: d.intensity
+        })),
+        biases: [],
+        connections: []
+      };
+      setCognitiveMap(map);
+      
       setIsLoading(false);
     }, 300);
   }, [currentSession?.messages]);
@@ -85,12 +120,64 @@ export default function VisualizationContainer({ onItemClick }: VisualizationCon
           </div>
         )}
         
-        <Scene
-          layerData={layerData}
-          selectedLayer={selectedLayer}
-          onLayerClick={handleLayerClick}
-          onReset={handleReset}
-        />
+        {viewMode === 'organism' ? (
+          <OrganismScene
+            layerData={layerData}
+            cognitiveMap={cognitiveMap}
+            selectedLayer={selectedLayer}
+            onLayerClick={handleLayerClick}
+            onReset={handleReset}
+            viewMode={viewMode}
+          />
+        ) : viewMode === 'tree' ? (
+          <TreeVisualization
+            layerData={layerData}
+            cognitiveMap={cognitiveMap}
+            selectedLayer={selectedLayer}
+            onNodeClick={handleLayerClick}
+          />
+        ) : (
+          <Scene
+            layerData={layerData}
+            selectedLayer={selectedLayer}
+            onLayerClick={handleLayerClick}
+            onReset={handleReset}
+          />
+        )}
+        
+        {/* 视图模式切换按钮 */}
+        <div className="absolute bottom-4 right-4 flex gap-2 z-10">
+          <button
+            onClick={() => setViewMode('tree')}
+            className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+              viewMode === 'tree'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            分叉树视图
+          </button>
+          <button
+            onClick={() => setViewMode('organism')}
+            className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+              viewMode === 'organism'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            生物体视图
+          </button>
+          <button
+            onClick={() => setViewMode('layers')}
+            className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+              viewMode === 'layers'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            层级视图
+          </button>
+        </div>
       </div>
     </VisualizationPanel>
   );

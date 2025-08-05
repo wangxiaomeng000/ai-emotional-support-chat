@@ -32,6 +32,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+backend/.env
+!.env.example
+!backend/.env.example
 
 # vercel
 .vercel
@@ -44,3 +47,21 @@ next-env.d.ts
 .1024*
 !.1024
 .breakpoints
+
+# backend
+backend/dist/
+backend/node_modules/
+
+# database
+mongodb_data/
+
+# uploads
+uploads/
+public/uploads/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db

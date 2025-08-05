@@ -1,5 +1,8 @@
 import { analysisEngine } from './analysisEngine';
 import { responseGenerator } from './responseGenerator';
+import { factualResponseGenerator } from './factualResponseGenerator';
+import { factExtractionEngine } from './factExtractionEngine';
+import { cognitiveAnalysisEngine } from './cognitiveAnalysisEngine';
 import { Message, AnalysisResult } from '../../types';
 import { generateLayerColor } from '../utils';
 
@@ -7,6 +10,7 @@ interface ProcessMessageOptions {
   includeAnalysis?: boolean;
   responseDelay?: number;
   imageAnalysisTime?: number;
+  useFactualApproach?: boolean;
 }
 
 class AiService {
@@ -14,7 +18,8 @@ class AiService {
   async processMessage(
     content: string, 
     image?: string, 
-    options: ProcessMessageOptions = {}
+    options: ProcessMessageOptions = {},
+    conversationHistory: Array<{ content: string; role: 'user' | 'ai' }> = []
   ): Promise<{
     response: string;
     analysis: AnalysisResult | null;
@@ -22,7 +27,8 @@ class AiService {
     const {
       includeAnalysis = true,
       responseDelay = 1000,
-      imageAnalysisTime = 500
+      imageAnalysisTime = 500,
+      useFactualApproach = true // 默认使用事实导向方法
     } = options;
     
     const hasImage = !!image;
@@ -30,8 +36,21 @@ class AiService {
     // 添加延迟模拟处理时间
     await this.delay(responseDelay + (hasImage ? imageAnalysisTime : 0));
     
-    // 生成回复
-    const { response, analysis } = responseGenerator.generateResponse(content, hasImage);
+    // 根据配置选择不同的响应生成器
+    let response: string;
+    let analysis: AnalysisResult;
+    
+    if (useFactualApproach) {
+      // 使用新的事实导向方法
+      const result = await factualResponseGenerator.generateResponse(content, conversationHistory, hasImage, image);
+      response = result.response;
+      analysis = result.analysis;
+    } else {
+      // 使用原有的情感支持方法
+      const result = responseGenerator.generateResponse(content, hasImage);
+      response = result.response;
+      analysis = result.analysis;
+    }
     
     return {
       response,
@@ -46,52 +65,79 @@ class AiService {
       .map(m => analysisEngine.analyzeMessage(m.content, !!m.image));
   }
 
-  // 生成3D层数据
+  // 生成3D层数据（改进版，为生物体模型做准备）
   generateLayerData(messages: Message[]): any[] {
     const layerData: any[] = [];
+    
+    // 收集所有消息的事实、洞见和概念
+    const allFacts: string[] = [];
+    const allInsights: string[] = [];
+    const allConcepts: string[] = [];
     
     messages.forEach(message => {
       if (message.role !== 'ai' || !message.analysis) return;
       
       const { facts, insights, concepts } = message.analysis;
-      
-      // 事实层
-      facts.forEach((fact, index) => {
-        layerData.push({
-          id: `fact-${message.id}-${index}`,
-          type: 'facts',
-          content: fact,
-          position: this.randomPosition(1),
-          color: generateLayerColor('facts'),
-          intensity: 0.8,
-          relatedMessageId: message.id
-        });
+      allFacts.push(...facts);
+      allInsights.push(...insights);
+      allConcepts.push(...concepts);
+    });
+    
+    // 使用新的布局算法，准备过渡到生物体模型
+    // 事实层 - 核心区域
+    allFacts.forEach((fact, index) => {
+      const angle = (index / allFacts.length) * Math.PI * 2;
+      const radius = 2 + Math.random() * 1;
+      layerData.push({
+        id: `fact-${index}`,
+        type: 'facts',
+        content: fact,
+        position: [
+          Math.cos(angle) * radius,
+          0,
+          Math.sin(angle) * radius
+        ],
+        color: generateLayerColor('facts'),
+        intensity: 0.8 + Math.random() * 0.2,
+        relatedMessageId: messages[messages.length - 1]?.id || ''
       });
-      
-      // 洞见层
-      insights.forEach((insight, index) => {
-        layerData.push({
-          id: `insight-${message.id}-${index}`,
-          type: 'insights',
-          content: insight,
-          position: this.randomPosition(2),
-          color: generateLayerColor('insights'),
-          intensity: 0.7,
-          relatedMessageId: message.id
-        });
+    });
+    
+    // 洞见层 - 中间区域
+    allInsights.forEach((insight, index) => {
+      const angle = (index / allInsights.length) * Math.PI * 2;
+      const radius = 4 + Math.random() * 1.5;
+      layerData.push({
+        id: `insight-${index}`,
+        type: 'insights',
+        content: insight,
+        position: [
+          Math.cos(angle) * radius,
+          1,
+          Math.sin(angle) * radius
+        ],
+        color: generateLayerColor('insights'),
+        intensity: 0.7 + Math.random() * 0.2,
+        relatedMessageId: messages[messages.length - 1]?.id || ''
       });
-      
-      // 观念层
-      concepts.forEach((concept, index) => {
-        layerData.push({
-          id: `concept-${message.id}-${index}`,
-          type: 'concepts',
-          content: concept,
-          position: this.randomPosition(3),
-          color: generateLayerColor('concepts'),
-          intensity: 0.9,
-          relatedMessageId: message.id
-        });
+    });
+    
+    // 概念层 - 外围区域
+    allConcepts.forEach((concept, index) => {
+      const angle = (index / allConcepts.length) * Math.PI * 2;
+      const radius = 6 + Math.random() * 2;
+      layerData.push({
+        id: `concept-${index}`,
+        type: 'concepts',
+        content: concept,
+        position: [
+          Math.cos(angle) * radius,
+          2,
+          Math.sin(angle) * radius
+        ],
+        color: generateLayerColor('concepts'),
+        intensity: 0.9 + Math.random() * 0.1,
+        relatedMessageId: messages[messages.length - 1]?.id || ''
       });
     });
     

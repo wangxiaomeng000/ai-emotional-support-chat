@@ -2,11 +2,16 @@
 
 import { MainLayout, Sidebar } from '../components/layout';
 import { ChatContainer } from '../components/chat';
+import ChatContainerApi from '../components/chat/ChatContainerApi';
 import { VisualizationContainer } from '../components/3d-visualization';
 import { useChat } from '../hooks/use-chat';
+import { useChatApi } from '../hooks/use-chat-api';
 import { useState } from 'react';
 
+const USE_MOCK_API = process.env.NEXT_PUBLIC_USE_MOCK_API === 'true';
+
 export default function HomePage() {
+  const chatHook = USE_MOCK_API ? useChat() : useChatApi();
   const { 
     sessions, 
     currentSession, 
@@ -15,7 +20,7 @@ export default function HomePage() {
     deleteSession,
     downloadBackup,
     importFromFile
-  } = useChat();
+  } = chatHook;
   
   const [selectedAnalysis, setSelectedAnalysis] = useState(null);
 
@@ -55,8 +60,10 @@ export default function HomePage() {
     />
   );
 
+  const ChatComponent = USE_MOCK_API ? ChatContainer : ChatContainerApi;
+  
   const chatPanel = (
-    <ChatContainer
+    <ChatComponent
       onViewAnalysis={handleViewAnalysis}
       onExportChat={handleExportChat}
       onClearChat={handleClearChat}

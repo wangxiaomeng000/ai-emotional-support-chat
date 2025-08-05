@@ -54,11 +54,23 @@ export default function ChatContainer({
     setLoading(true);
     
     try {
+      // 构建对话历史
+      const conversationHistory = currentSession?.messages.map(msg => ({
+        content: msg.content,
+        role: msg.role
+      })) || [];
+      
       // 调用AI服务处理消息
-      const { response, analysis } = await aiService.processMessage(content, image, {
-        includeAnalysis: true,
-        responseDelay: Math.floor(Math.random() * 1000) + 1000 // 1-2秒随机延迟
-      });
+      const { response, analysis } = await aiService.processMessage(
+        content, 
+        image, 
+        {
+          includeAnalysis: true,
+          responseDelay: Math.floor(Math.random() * 1000) + 1000, // 1-2秒随机延迟
+          useFactualApproach: true // 使用事实导向方法
+        },
+        conversationHistory
+      );
       
       // 添加AI响应
       addMessage({
@@ -72,7 +84,7 @@ export default function ChatContainer({
       
       // 添加简单回退响应
       addMessage({
-        content: '抱歉，我现在无法正确处理您的请求。请稍后再试。',
+        content: '抱歉，我现在无法处理您的请求。请继续描述具体的事实信息。',
         role: 'ai'
       });
     } finally {
@@ -146,7 +158,7 @@ export default function ChatContainer({
         <MessageInput
           onSendMessage={handleSendMessage}
           disabled={isLoading}
-          placeholder="分享您的想法或上传图片..."
+          placeholder="描述一个具体事件，包括时间、地点和人物..."
         />
       </div>
     </ChatPanel>

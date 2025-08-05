@@ -93,20 +93,20 @@ export default function MainLayout({
       {/* 桌面端主内容区域 */}
       <div className="flex-1">
         <PanelGroup direction="horizontal" className="h-full">
-          {/* 左侧聊天面板 */}
-          <Panel defaultSize={50} minSize={30} maxSize={70}>
+          {/* 中央3D可视化面板 - 主要区域 */}
+          <Panel defaultSize={75} minSize={60} maxSize={85}>
             <div className="h-full flex flex-col">
-              {chatPanel}
+              {visualizationPanel}
             </div>
           </Panel>
 
           {/* 分割条 */}
           <PanelResizeHandle className="w-2 bg-border hover:bg-accent transition-colors" />
 
-          {/* 右侧3D可视化面板 */}
-          <Panel defaultSize={50} minSize={30} maxSize={70}>
+          {/* 右侧聊天面板 - 窄边栏 */}
+          <Panel defaultSize={25} minSize={15} maxSize={40}>
             <div className="h-full flex flex-col">
-              {visualizationPanel}
+              {chatPanel}
             </div>
           </Panel>
         </PanelGroup>

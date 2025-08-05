@@ -1,0 +1,47 @@
+{
+  "timestamp": "2025-08-05T15:00:21.293Z",
+  "summary": {
+    "total": 9,
+    "passed": 9,
+    "failed": 0,
+    "passRate": "100.0%"
+  },
+  "tests": [
+    {
+      "name": "健康检查",
+      "status": "passed"
+    },
+    {
+      "name": "Mock功能禁用验证",
+      "status": "passed"
+    },
+    {
+      "name": "创建会话",
+      "status": "passed"
+    },
+    {
+      "name": "文本消息处理",
+      "status": "passed"
+    },
+    {
+      "name": "图片识别功能",
+      "status": "passed"
+    },
+    {
+      "name": "多轮对话",
+      "status": "passed"
+    },
+    {
+      "name": "会话历史查询",
+      "status": "passed"
+    },
+    {
+      "name": "3D可视化数据",
+      "status": "passed"
+    },
+    {
+      "name": "会话列表查询",
+      "status": "passed"
+    }
+  ]
+}
