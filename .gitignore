@@ -65,3 +65,7 @@ public/uploads/
 
 # OS
 Thumbs.db
+
+# MongoDB binaries
+backend/mongodb-*
+*.tgz
